@@ -55,6 +55,21 @@ app = FastAPI(
 if settings.enable_tracing:
     FastAPIInstrumentor.instrument_app(app)
 
+@app.get("/")
+async def root():
+    return {
+        "service": "Distributed Task Scheduler & Webhook Dispatcher API",
+        "status": "running",
+        "docs": "/docs",
+        "health": "/health",
+        "metrics": "/metrics",
+        "endpoints": {
+            "enqueue_job": "POST /jobs",
+            "get_job": "GET /jobs/{id}",
+            "replay_dlq": "POST /admin/dlq/replay",
+        },
+    }
+
 @app.post("/jobs")
 async def enqueue_job(req: EnqueueJobRequest, response: Response):
     with tracer.start_as_current_span("api.enqueue_job") as span:

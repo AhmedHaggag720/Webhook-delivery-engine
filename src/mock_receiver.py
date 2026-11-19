@@ -31,6 +31,18 @@ class ChaosConfig(BaseModel):
     failure_rate: float = 0.30
     slow_response_rate: float = 0.05
 
+@app.get("/")
+async def root():
+    return {
+        "service": "Mock Chaos-Enabled Webhook Receiver",
+        "status": "running",
+        "docs": "/docs",
+        "stats": "/stats",
+        "health": "/health",
+        "webhook_endpoint": "POST /webhook",
+        "chaos_enabled": chaos_enabled,
+    }
+
 @app.post("/webhook")
 async def receive_webhook(
     request: Request,
