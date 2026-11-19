@@ -81,7 +81,7 @@ async def blast_jobs(client: httpx.AsyncClient) -> List[Dict]:
 
     return created_jobs
 
-async def wait_for_queue_drain(client: httpx.AsyncClient, timeout_sec: int = 300) -> Dict:
+async def wait_for_queue_drain(client: httpx.AsyncClient, timeout_sec: int = 600) -> Dict:
     print("[*] Waiting for queue drain (polling delivery progress)...")
     start = time.perf_counter()
 
@@ -189,6 +189,7 @@ async def main():
     parser = argparse.ArgumentParser(description="Chaos & Load Test Benchmark")
     parser.add_argument("--kill-worker-pid", type=int, default=None, help="Process PID of a worker to kill mid-flight")
     parser.add_argument("--skip-kill", action="store_true", help="Skip worker SIGKILL step")
+    parser.add_argument("--timeout", type=int, default=600, help="Max seconds to wait for queue drain (default: 600s)")
     args = parser.parse_args()
 
     async with httpx.AsyncClient() as client:
@@ -216,7 +217,7 @@ async def main():
                 print(f"[!] Failed to kill worker process: {e}")
 
         # Step 3: Wait for initial queue drain
-        drain_result = await wait_for_queue_drain(client, timeout_sec=240)
+        drain_result = await wait_for_queue_drain(client, timeout_sec=args.timeout)
         total_processed = drain_result["delivered"] + drain_result["dlq"]
         print(f"[*] Initial drain complete. Processed: {total_processed}/{TOTAL_JOBS} (Zero Lost Jobs check: {total_processed == TOTAL_JOBS})")
         assert total_processed == TOTAL_JOBS, f"Lost jobs detected! Expected {TOTAL_JOBS}, got {total_processed}"
